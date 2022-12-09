@@ -1,4 +1,3 @@
-
 function makedata(Fs,Kc,F)
 
 % Kc:最低の繰り返し周期

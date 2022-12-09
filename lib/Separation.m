@@ -93,7 +93,7 @@ classdef Separation
                 case 2
                     new_time = time(Diff_motion < 0 - 10000*eps);
                     new_signal = gaid(Diff_motion < 0 - 10000*eps);
-                    new_noise_signal = param.signall(Diff_motion < 0 - 10000*eps);
+                    new_noise_signal = param.signal(Diff_motion < 0 - 10000*eps);
 
                 otherwise
                     disp('Please enter "1" for a PUSH  or "2" for a PULL');
