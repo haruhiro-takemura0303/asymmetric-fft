@@ -184,5 +184,92 @@ classdef Separation
                 cellNoiseSignal(1,l) = {noise_motion(t_start_end(2*l-1):t_start_end(2*l))};
             end
         end
+        
+        %% 
+        function [new_extend_time,new_extend_signal] = extractExtendMotion(Fs,signal,F,k)
+            %{
+             Args:
+                > extractNoiseMotion
+                　t_motion       (array) : 各モードの時間配列
+                　sig_motion     (array) : ガイド信号の各モードの振幅配列
+                  noise_motion   (array) : ノイズ信号の各モードの振幅配列
+             
+             Return:
+                cellSignal      (cell) : ガイド信号の各モードが半周期ごとに格納されたデータ格子
+                cellNoiseSignal (cell) : ノイズ信号の各モードが半周期ごとに格納されたデータ格子
+           %}
+            %%==================================================================================== 
+            %%config
+            sig = CreateSignal(param.Fs,param.f,param,amp);
+            FRAME=3;
+            T_GAID= 10;
+
+            %%波形＋ガイドの準備
+            start=1; i=1;
+            for count=1:k-2;
+            % reshape data
+            yy=signal(start:start+Fs/F*FRAME);
+            
+            % make gaide
+            Amp=mean(findpeaks(yy));
+            [gaid,~] = sig.createCosSample(param,T_GAIS);
+            
+            %%波形の位置合わせ（相互相関）
+            [C,lag] = xcorr(gaid,yy);
+            C = C/max(C);
+            
+            1
+            % calculate lags
+            [~,I] = max(C);
+            gaid = gaid(lag(I)+1:end);
+            
+            %% 配列整理
+            [push_gaid,push_signal] = separateNoiseMotion(Fs,yy,gaid(1:Fs/F*3),1);
+            [pull_gaid,pull_signal] = separateNoiseMotion(Fs,yy,gaid(1:Fs/F*3),2);
+            
+            pushL=length(push_signal);
+            pullL=length(pull_signal);
+            
+            % one period pull・push signal in Cross-correlation situation
+            
+                if count == 1;
+                    signal_push{1,i}=push_signal{1,pushL-2};
+                    signal_pull{1,i}=pull_signal{1,pullL-2};
+            
+                    signal_push{1,i+1}=push_signal{1,pushL-1};
+                    signal_pull{1,i+1}=pull_signal{1,pullL-1};
+                    
+                    i=i+2;
+                elseif count == k-2;
+                    
+                    signal_push{1,i}=push_signal{1,pushL-1};
+                    signal_pull{1,i}=pull_signal{1,pullL-1};
+            
+                    signal_push{1,i+1}=push_signal{1,pushL};
+                    signal_pull{1,i+1}=pull_signal{1,pullL};        
+                    
+                    i=i+2;
+                else
+                    signal_push{1,i}=push_signal{1,pushL-1};
+                    signal_pull{1,i}=pull_signal{1,pullL-1};
+                    
+                    i=i+1;
+                end
+                    
+            
+            % calculate next start point
+            A=length(push_gaid{1,1})+length(pull_gaid{1,1});
+            start=start+A;
+            % AA(count)=start;
+            % AAmp(count)=Amp;
+            % BB(count)=start+length(pull_gaid{1,1});
+            end
+            % signal_push = readArray(pushInversion(signal_push));
+            % signal_pull = readArray(pullInversion(signal_pull));
+            end
+
+
+
+
     end
 end
