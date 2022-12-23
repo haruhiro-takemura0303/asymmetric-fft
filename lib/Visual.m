@@ -72,7 +72,7 @@ classdef Visual
             xlabel('Frequency [Hz]')
             ylabel('Power [db]')
             
-            ylim([-350,0])
+%             ylim([-350,0])
             xlim([0,f_lim])
             
             % GCF設定

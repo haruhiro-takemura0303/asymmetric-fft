@@ -1,7 +1,24 @@
-test = CreateSignal(48e3,1e3,1)
+clear all
 
-[y,t] = test.createSinSample(10);
+% param
+Fs = 48e3;
+f = 1e3;
+amp = 1;
 
-scatter(t,y)
+% Instance
+test = CreateSignal(Fs,f,amp);
+plt = Visual(Fs,f)
 
-test.createDistorionSignal(6,50,10,y)
+% execute
+[signal,time] = test.createSinSample(100);
+dist_signal = test.createDistorionSignal(-10,-50,10,signal);
+
+% visual
+% figure(1)
+% plt.plotFFT(signal(1:end-1),"ORIGIN");
+
+figure(2)
+plt.plotFFT(dist_signal(1:end-1),"ORIGIN",Fs/2);
+
+
+k = fix(length(signal)/(Fs/f))

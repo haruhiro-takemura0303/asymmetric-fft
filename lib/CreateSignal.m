@@ -84,7 +84,7 @@ classdef CreateSignal
             Amp_c = zeros(1,11);
             Amp_c(1) =1;
             for i=2:hnum
-                Amp_c(i)=10^((D2-Kd*log2(i/2))/20); 
+                Amp_c(i)=10^((D2+Kd*log2(i/2))/20); 
             end
         
             %%多項式近似の係数導出
