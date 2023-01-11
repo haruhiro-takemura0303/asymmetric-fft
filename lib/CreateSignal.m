@@ -34,7 +34,7 @@ classdef CreateSignal
         %    ampで始まりampで終わるcos信号を作成する。
         %}
         %====================================================================================                          
-            t_end = period/param.f 
+            t_end = period/param.f ;
             time = 0 : 1/param.fs : t_end;           
             signal = param.amp*cos(2*pi*param.f*time);
 
@@ -55,7 +55,7 @@ classdef CreateSignal
         %    0で始まり0で終わるSin信号を作成する。
         %
         %====================================================================================                          
-            t_end = period/param.f 
+            t_end = period/param.f;
             time = 0 : 1/param.fs : t_end;           
             signal = param.amp*sin(2*pi*param.f*time);
             

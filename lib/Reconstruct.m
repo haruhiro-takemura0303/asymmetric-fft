@@ -134,14 +134,14 @@ classdef Reconstruct
          %   この配列を結合し一つの時系列データを作成する。
          %======================================================================
             % 結合後配列の宣言
-            [~,col] = cellfun(@size,cellSignal);
-            catSignal = zeros(1,sum(col));
+            [dataNum,~] = cellfun(@size,cellSignal);
+            catSignal = zeros(1,sum(dataNum));
             
             % 結合後配列への格納
             start = 1;
             for i = 1:length(cellSignal)
-                catSignal(start:start+col(i)-1) = cellSignal{1,i};
-                start = start + col(i);
+                catSignal(start:start+dataNum(i)-1) = cellSignal{1,i};
+                start = start + dataNum(i);
             end
          end
         

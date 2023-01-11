@@ -1,5 +1,4 @@
 classdef Preprocess
-<<<<<<< HEAD
     % 計測信号（単一正弦波）に対して前処理を行う。
 
     properties
@@ -14,27 +13,11 @@ classdef Preprocess
             if nargin == 2
                 param.fs = sampleRate;
                 param.f = freq;
-=======
-    
-    properties
-    fs
-    f
-    end
-    
-    methods
-        
-        function param = Preprocess(fs,f)
-            % Init parameter
-            if nargin == 2
-                param.fs = fs;
-                param.f = f;
->>>>>>> 6dd062eaba5841d02d189d91a123c007a8d88c1b
             else
                 error("Input argument need two.")
             end
 
         end
-<<<<<<< HEAD
         
         %% メソッド修正
         function param = resetFs(param,SampleRate)
@@ -50,7 +33,7 @@ classdef Preprocess
         %% 無音処理
         function signal_trim = trimSilence(param,signal)
          %前後の無音部分を削除する
-
+         %
          %Args:　
          %  signal      : フィルタの次数
          %
@@ -60,29 +43,12 @@ classdef Preprocess
          %Note:
          %  計測信号の前後の無音区間を切り捨てる。
          %
-=======
-    
-        %% 無音処理
-        function signal_trim = trimSilence(param,signal)
-         %{
-         Args:　
-            signal      : フィルタの次数
-        
-         Return:
-            signal_trim : 補完フィルタの係数
-
-         Note:
-            計測信号の前後の無音区間を切り捨てる。
-         %}
->>>>>>> 6dd062eaba5841d02d189d91a123c007a8d88c1b
          %====================================================================================   
         
             flag1 = false;
             flag2 = false;
-<<<<<<< HEAD
             len_sig = length(signal);
-=======
->>>>>>> 6dd062eaba5841d02d189d91a123c007a8d88c1b
+
             for i = 1:len_sig
                 % 前方の切り出し
                 if abs(signal(i)) > max(signal)*0.8 && ~flag1
@@ -106,9 +72,8 @@ classdef Preprocess
         
         %% ローパスの設計
         function [factor,delay] = makeInterpFilter(param,n,fsi,ap,ast)
-<<<<<<< HEAD
          %補完フィルタを作成する。
-
+         %
          %Args:　
          %   n           : フィルタの次数
          %   fs          : リサンプリング前の周波数
@@ -124,24 +89,6 @@ classdef Preprocess
          %   リサンプリング後の補完処理を行うフィルタを作成する。
          %   主な処理は "firceqrip" 関数で実行
          %
-=======
-         %{
-         Args:　
-            n           : フィルタの次数
-            fs          : リサンプリング前の周波数
-            fsi         : リサンプリング後の周波数
-            ap          : リップルの振幅
-            ast         : 阻止帯域の減衰量
-        
-         Return:
-            param       : 補完フィルタの係数
-            delay       : 群遅延
-        
-         Note:
-            リサンプリング後の補完処理を行うフィルタを作成する。
-            主な処理は "firceqrip" 関数で実行
-         %}
->>>>>>> 6dd062eaba5841d02d189d91a123c007a8d88c1b
          %====================================================================================      
         
             %ローパスフィルタの作成
@@ -159,10 +106,9 @@ classdef Preprocess
         
         
         %% リサンプリング
-<<<<<<< HEAD
         function signal_resample = resampleSignal(param,fs_up,signal)
          %リサンプリングを行う。
-
+         %
          %Args:　
          %   fs          : リサンプリング前の周波数
          %   fs_up       : リサンプリング後の周波数
@@ -182,29 +128,6 @@ classdef Preprocess
            rate_up = fs_up / param.fs;
         
            %fs_upがfsの整数倍か確認
-=======
-        function signal_resample = resampleSignal(param,fsi,signal)
-         %{
-         Args:　
-            fs          : リサンプリング前の周波数
-            fsi         : リサンプリング後の周波数
-            signal      : リサンプリング前の信号
-        
-         Return:
-            signal_resample     : リサンプリング後の信号
-        
-         Note:
-            リサンプリングを行い補完処理を行う。
-            
-            今回は整数倍のリサンプリングのみを想定。整数倍でない場合は、
-            最終公倍数倍にアップサンプリングし、最大公約倍ダウンサンプリングする。
-         %}
-         %====================================================================================      
-           %%アップサンプリングの倍率計算
-           rate_up = fsi / param.fs;
-        
-           %fsiがfsの整数倍か確認
->>>>>>> 6dd062eaba5841d02d189d91a123c007a8d88c1b
            if floor(rate_up) ~= rate_up
                 error("The sampled frequency after resampling must be an integer multiple")
            end
@@ -214,23 +137,18 @@ classdef Preprocess
            signal_up=upsample(signal,rate_up);
            
            %補完処理
-<<<<<<< HEAD
            [factor,delay] = param.makeInterpFilter(300,fs_up,0.01,160);
-=======
-           [factor,delay] = makeInterpFilter(param,300,fsi,0.01,160);
->>>>>>> 6dd062eaba5841d02d189d91a123c007a8d88c1b
            signal_resample = filter(factor,1,signal_up);
         
            %FIRの群遅延分切り捨て
            signal_resample = signal_resample(delay:end);
         
         end
-<<<<<<< HEAD
 
         %% 前後周期の切り捨て
         function signal_reshape = reshapeSignal(param,period,signal)
          %前後数周期の削除を行う。
-
+         %
          %Args:　
          %   fs          : リサンプリング前の周波数
          %   f           : リサンプリング後の周波数
@@ -244,26 +162,7 @@ classdef Preprocess
          %   
          %   今回は整数倍のリサンプリングのみを想定。整数倍でない場合は、
          %   最終公倍数倍にアップサンプリングし、最大公約倍ダウンサンプリングする。
-=======
-        
-        %% 前後周期の切り捨て
-        function signal_reshape = reshapeSignal(param,period,signal)
-         %{
-         Args:　
-            fs          : リサンプリング前の周波数
-            f           : リサンプリング後の周波数
-            period      : リサンプリング前の信号
-        
-         Return:
-            signal_resample     : リサンプリング後の信号
-        
-         Note:
-            リサンプリングを行い補完処理を行う。
-            
-            今回は整数倍のリサンプリングのみを想定。整数倍でない場合は、
-            最終公倍数倍にアップサンプリングし、最大公約倍ダウンサンプリングする。
->>>>>>> 6dd062eaba5841d02d189d91a123c007a8d88c1b
-         %}
+         %
          %====================================================================================   
             
             %%ガイド波形の作成
@@ -281,12 +180,8 @@ classdef Preprocess
             
             %lagsが何周期分か確認
             start_period = round(start_lag/(param.fs/param.f));
-<<<<<<< HEAD
             start_sig = start_lag + round(param.fs/param.f) * (period-start_period)+1;
-=======
-            start_sig = start_lag + round(param.fs/param.f) * (period-start_period);
->>>>>>> 6dd062eaba5841d02d189d91a123c007a8d88c1b
-            
+
             %%新規終了点の計算
             ref_end = signal(length(signal)-length(gaid)*2:end);
             ref_end = flip(ref_end);
@@ -299,11 +194,8 @@ classdef Preprocess
             
             %lagsが何周期分か確認
             end_period = round(end_lag/(param.fs/param.f));
-<<<<<<< HEAD
             end_sig = length(signal) - (end_lag + round(param.fs/param.f) * (period-end_period))-1;
-=======
-            end_sig = length(signal) - (end_lag + round(param.fs/param.f) * (period-end_period));
->>>>>>> 6dd062eaba5841d02d189d91a123c007a8d88c1b
+
             
             %%波形の切り出し
             signal_reshape = signal(start_sig:end_sig);

@@ -227,7 +227,8 @@ classdef Separation
             %%==================================================================================== 
             
             %%cellの宣言
-            signalCycleNumber = fix(length(signal)/(param.fs/param.f));
+            margin = 1;
+            signalCycleNumber = round(length(signal)/(param.fs/param.f))-margin;
             cellExtendSignal = cell(1,signalCycleNumber);
             
             %%ガイド波形のパラメータ
@@ -238,10 +239,10 @@ classdef Separation
             %%波形＋ガイドの準備
             start=1; i=1;
 
-            for count=1:signalCycleNumber-2
+            for count=1:signalCycleNumber-(FRAME-1)
                 % Frame 分波形を切り出す
                 y = signal(start:start+(param.fs/param.f)*FRAME);
-                length(y)
+
                 % ガイド波形の作成
                 Amp = max(y);
                 gaid = gen.createCosSample(gaidCycleNumber);
@@ -272,14 +273,14 @@ classdef Separation
                         cellExtendSignal{1,i} = extractedSignal{1,extractLength-2};
                         cellExtendSignal{1,i+1} = extractedSignal{1,extractLength-1};
                         
-                        i=i+2;
+                        i=i+(FRAME-1);
                     
-                    elseif count == k-2
+                    elseif count == signalCycleNumber-(FRAME-1)
                         
                         cellExtendSignal{1,i} = extractedSignal{1,extractLength-1};
                         cellExtendSignal{1,i+1} = extractedSignal{1,extractLength};    
                         
-                        i = i+2;
+                        i = i+(FRAME-1);
                     else
                         cellExtendSignal{1,i} = extractedSignal{1,extractLength-1};
                         
@@ -288,7 +289,7 @@ classdef Separation
             
                 % calculate next start point
                 cellLength=length(extractedGaid{1,1})+length(extractOtherSignal{1,1});
-                start = start+cellLength;
+                start = start+cellLength-2;
            
             end
         end
