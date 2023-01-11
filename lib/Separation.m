@@ -257,7 +257,7 @@ classdef Separation
                 gaid = gaid(lag(I)+1:end);
                 
                 %% 配列整理
-                [extractedSignal,extractedGaid,] = separateNoiseMotion(param,y,gaid(1:param.fs/param.f*FRAME+1),n);
+                [extractedSignal,extractedGaid] = separateNoiseMotion(param,y,gaid(1:param.fs/param.f*FRAME+1),n);
 
                 if n == 1
                     [~,extractOtherSignal] = separateNoiseMotion(param,y,gaid(1:param.fs/param.f*FRAME+1),2);

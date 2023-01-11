@@ -62,11 +62,11 @@ for m = 1:length(freq_list)
 
             % クリーン電源
             data_strct = load(data_path+"/"+num2str(tl_num)+"_"+name+"_cl_"+polar_list1(k)+"_"+vpp_list(n)+"_"+freq_list(m)+".mat");
-            clean.(polar_list1(k)).freq(m).vpp(n).trial(tl_num).signal = read_signal(data_strct);
+            clean.(polar_list1(k)).freq(m).vpp(n).trial(tl_num).signal = readSignal(data_strct);
 
             % 商用電源
             data_strct = load(data_path+"/"+num2str(tl_num)+"_"+name+"_co_"+polar_list1(k)+"_"+vpp_list(n)+"_"+freq_list(m)+".mat");
-            commercial.(polar_list1(k)).freq(m).vpp(n).trial(tl_num).signal = read_signal(data_strct);
+            commercial.(polar_list1(k)).freq(m).vpp(n).trial(tl_num).signal = readSignal(data_strct);
 
         end
 
@@ -74,7 +74,7 @@ for m = 1:length(freq_list)
 
             % 同一電源
             data_strct = load(data_path+"/"+num2str(tl_num)+"_"+name+"_uni_"+polar_list2(k)+"_"+vpp_list(n)+"_"+freq_list(m)+".mat");
-            uni.(polar_list2(k)).freq(m).vpp(n).trial(tl_num).signal = read_signal(data_strct);
+            uni.(polar_list2(k)).freq(m).vpp(n).trial(tl_num).signal = readSignal(data_strct);
 
         end
     end
@@ -113,7 +113,7 @@ if exist(SAVE_PATH+"/"+amp_name+"/parameter.mat","dir") == 0
 end
 %---------------------------------function-------------------------------------------
 
-function signal = read_signal(data_strct)
+function signal = readSignal(data_strct)
     % 要素の名称を抜き出し
     name = fieldnames(data_strct);
     name = string(name);
