@@ -1,145 +1,170 @@
 classdef Separation
-    
+    % 信号を立上り・立下りに分割
     properties
-    Fs
-    f
-    signal
-    n
+    fs      %サンプリング周波数
+    f       %分析信号(単一余弦波)の周波数
     end
     
     methods
-        
-        function param = Separation(Fs,f,n)
-            % Init parameter
-            if nargin == 3
-                param.Fs = Fs;
-                param.n = n;
-                param.f = f;
+        %% コンストラクタ
+        function param = Separation(sampleRate,freq)
+            if nargin == 2
+                param.fs = sampleRate;
+                param.f = freq;
             else
-                error("Input argument need three.")
+                error("Input argument need two.")
             end
         end
     
-        %% 時系列信号から各モード(立上り・立下り)をサンプルの傾きから抽出するヘルパー関数
-        function [new_time,new_signal] = extractMotion(param,signal)
-        %{
-        Args:  
-            Fs      : サンプリング周波数
-            signal  : テスト信号
-            n       : モードの選択 push (1) / pull (2)
-        
-        Return:
-            new_time: 選択したモードのみからなる時間配列
-            new_signal: 選択したモードのみからなる振幅配列
-        
-        Note:
-            ここでは、各モードのデータが一つなぎの時系列データとなって出力される。
-            ノイズや時間軸方向の歪を考慮していない。
-        %}
+        %% 立上り・立下りの判別
+        function check = findModeSample(param,signal,n)
+        % 信号の立上り・立下りを判別するヘルパー関数
+        %
+        %Args: 
+        %    signal  : テスト信号
+        %    n       : モードの選択 push (1) / pull (2)
+        %
+        %Return:
+        %    check   : 信号内の選択したモードのサンプル番号を1で返す。
+        %
+        %Note:
+        %    視点されたモードの開始点から終了点までを指定する。
+        %    振幅がampの余弦波であれば、amp-ampが指定される。
+        %
         %====================================================================================  
-        
-        % 隣接するサンプルの傾きを取得
-        Diff_signal = diff(signal);
-        time = (0:length(signal)-1)/param.Fs;
-        
-        switch param.n
-            % Push の抽出
-            case 1
-                new_time = time(Diff_signal > 0 + 10000*eps);
-                new_signal = signal(Diff_signal > 0 + 10000*eps);
-    
-            % Pull の抽出
-            case 2
-                new_time = time(Diff_signal < 0 - 10000*eps);
-                new_signal = signal(Diff_signal < 0 - 10000*eps);
+            %差分を求める
+            diffSignal = diff(signal); %前方から
+            diffInvSignal = flip(diff(flip(signal))); %後方から
+            
+            % check配列の宣言
+            check = zeros(1,length(signal));
+            
+            switch n
 
-            otherwise
-                disp('Please enter "1" for a PUSH  or "2" for a PULL');
-        end
-        end
-        
-        %% ノイズを含んだ時系列信号から各モードをサンプルの傾きから抽出するヘルパー関数
-        function [new_time,new_signal,new_noise_signal] = extractNoiseMotion(param,signal,gaid)
-            %{
-            Args:  
-                signal        : ノイズを含んだテスト信号
-                gaid          : ガイド波形となるノイズを含まない信号
-            
-            Return:
-                new_time        : 選択したモードのみからなる時間配列
-                new_signal      : 選択したモードのみからなる振幅配列
-                new_noise_signal: 選択したモードのみからなるノイズ信号の振幅配列 
-            
-            Note:
-                ここでは、各モードのデータが一つなぎの時系列データとなって出力される。
-                ホワイトノイズ等のランダム性のノイズを考慮している。
-                ノイズを含んだ信号と同様の周波数を持つ理想的なガイド信号を作成し、ガイド信号の
-                立上り・立下りに合わせて、各モードを抽出する。
-            %}
-            %====================================================================================  
-        
-            Diff_motion = diff(gaid);
-            time = (0:length(gaid)-1) / param.Fs;
-            
-            switch param.n
                 % Push の抽出
                 case 1
-                    new_time = time(Diff_motion > 0 + 10000*eps);
-                    new_signal = gaid(Diff_motion > 0 + 10000*eps);
-                    new_noise_signal = signal(Diff_motion > 0 + 10000*eps);
+                    checkForw = diffSignal > (0 + 10000*eps);
+                    checkInv = diffInvSignal < (0 + 10000*eps);
                 
-                % Pull の抽出   
+                % Pull の抽出
                 case 2
-                    new_time = time(Diff_motion < 0 - 10000*eps);
-                    new_signal = gaid(Diff_motion < 0 - 10000*eps);
-                    new_noise_signal = signal(Diff_motion < 0 - 10000*eps);
+                    checkForw = diffSignal < (0 + 10000*eps);
+                    checkInv = diffInvSignal > (0 + 10000*eps);
 
                 otherwise
                     disp('Please enter "1" for a PUSH  or "2" for a PULL');
             end
+            
+            %配列に格納
+            check(1)       = checkForw(1);
+            check(2:end-1) = checkForw(2:end) | checkInv(1:end-1);
+            check(end) = checkInv(end);
+        
+        end
+
+
+        %% 立上り・立下りの開始点の抽出
+        function [newTime,newSignal] = extractMotion(param,signal,n)
+        % 時系列信号から各モード(立上り・立下り)をサンプルの傾きから抽出するヘルパー関数
+        %
+        %Args:  
+        %    Fs      : サンプリング周波数
+        %    signal  : テスト信号
+        %    n       : モードの選択 push (1) / pull (2)
+        %
+        %Return:
+        %    new_time: 選択したモードのみからなる時間配列
+        %    new_signal: 選択したモードのみからなる振幅配列
+        %
+        %Note:
+        %    ここでは、各モードのデータが一つなぎの時系列データとなって出力される。
+        %    ノイズや時間軸方向の歪を考慮していない。
+        %
+        %====================================================================================  
+        
+            % 時間配列の宣言
+            time = (0:length(signal)-1)/param.fs;
+            
+            % 指定したモードを抽出
+            newTime = time(findModeSample(param,signal,n) == 1);
+            newSignal = signal(findModeSample(param,signal,n) == 1);
+
+        end
+        
+        %%  立上り・立下りの開始点の抽出[ノイズあり]
+        function [newGaidTime,newGaidSignal,newNoiseSignal] = extractNoiseMotion(param,signal,gaid,n)
+            % ノイズを含んだ時系列信号から各モードをサンプルの傾きから抽出するヘルパー関数
+            %
+            %Args:  
+            %    signal        : ノイズを含んだテスト信号
+            %    gaid          : ガイド波形となるノイズを含まない信号
+            %    n       : モードの選択 push (1) / pull (2)
+            %
+            %Return:
+            %    new_time        : 選択したモードのみからなる時間配列
+            %    new_signal      : 選択したモードのみからなる振幅配列
+            %    new_noise_signal: 選択したモードのみからなるノイズ信号の振幅配列 
+            %
+            %Note:
+            %    ここでは、各モードのデータが一つなぎの時系列データとなって出力される。
+            %    ホワイトノイズ等のランダム性のノイズを考慮している。
+            %    ノイズを含んだ信号と同様の周波数を持つ理想的なガイド信号を作成し、ガイド信号の
+            %    立上り・立下りに合わせて、各モードを抽出する。
+            %
+            %====================================================================================  
+            
+            % 時間配列の宣言
+            time = (0:length(gaid)-1) / param.fs;
+            
+            % 指定したモードを抽出
+            newGaidTime = time(findModeSample(param,gaid,n) == 1);
+            newGaidSignal = gaid(findModeSample(param,gaid,n) == 1);
+            newNoiseSignal = signal(findModeSample(param,gaid,n) == 1);
+            
             end
 
-        %% extractMotionで抽出した1つなぎのデータをcellごとに格納
-        function cellSignal = separateMotion(param,signal)
-            %{
-             Args:
-                > extractMotion
-                　t_motion   (array) : 各モードの時間配列
-                　sig_motion (array) : 各モードの振幅配列  
-             
-             Return:
-                CellSignal (cell)  : 各モードが半周期ごとに格納されたデータ格子
-            %}
+        %% cellに格納[extractMotion]
+        function cellSignal = separateMotion(param,signal,n)
+            % extractMotionで抽出した1つなぎのデータをcellごとに格納
+            %
+            % Args:
+            %      extractMotion
+            %    　t_motion   (array) : 各モードの時間配列
+            %    　sig_motion (array) : 各モードの振幅配列  
+            % 
+            % Return:
+            %    cellSignal (cell)  : 各モードが半周期ごとに格納されたデータ格子
+            %
             %====================================================================================    
             % extractMotionの実行
-            [t_motion,sig_motion] = extractMotion(param,signal);
+            [timeMotion,signalMotion] = extractMotion(param,signal,n);
 
             % 半周期ごとの開始点と終了点の特定
-            t_start_end = 1;
-            for k = 1 : length(t_motion)-1
+            timeStartEnd = 1;
+            for k = 1 : length(timeMotion)-1
                 
-                if(t_motion(k+1) - t_motion(k) > 1/param.Fs + 70*eps)
-                    t_start_end = [t_start_end,k,k+1];
+                if(timeMotion(k+1) - timeMotion(k) > 1/param.fs + 70*eps)
+                    timeStartEnd = [timeStartEnd,k,k+1];
                 end
             
             end
-            t_start_end = [t_start_end, length(t_motion)];
+            timeStartEnd = [timeStartEnd, length(timeMotion)];
             
             % 開始点と終了点のデータを使ってセルに格納
-            cellSignal = cell(1,length(t_start_end)/2);
+            cellSignal = cell(1,length(timeStartEnd)/2);
             for l = 1:size(cellSignal,2)
-                cellSignal(1,l) = {sig_motion(t_start_end(2*l-1):t_start_end(2*l))};
+                cellSignal(1,l) = {signalMotion(timeStartEnd(2*l-1):timeStartEnd(2*l))};
             end
             
             if(nargin == 4)
                 
-                if(param.n == 1 && mod(param.Fs/param.f,4) == 2)
+                if(param.n == 1 && mod(param.fs/param.f,4) == 2)
                     for i = 1:size(cellSignal,2)-1
                         cellSignal{1,i} = [cellSignal{1,i},cellSignal{1,i}(end)];
                     end
                 end
                 
-                if(param.n == 2 && mod(param.Fs/param.f,4) == 2)
+                if(param.n == 2 && mod(param.fs/param.f,4) == 2)
                     for i = 1:size(cellSignal,2)
                         cellSignal{1,i} = [cellSignal{1,i},cellSignal{1,i}(end)];
                     end
@@ -147,83 +172,83 @@ classdef Separation
             end
         end
         
-        %% extractNoiseMotionで抽出した1つなぎのデータをcellごとに格納
-        function [cellNoiseSignal,cellSignal] = separateNoiseMotion(param,signal,gaid)
-           %{
-             Args:
-                > extractNoiseMotion
-                　t_motion       (array) : 各モードの時間配列
-                　sig_motion     (array) : ガイド信号の各モードの振幅配列
-                  noise_motion   (array) : ノイズ信号の各モードの振幅配列
-             
-             Return:
-                cellSignal      (cell) : ガイド信号の各モードが半周期ごとに格納されたデータ格子
-                cellNoiseSignal (cell) : ノイズ信号の各モードが半周期ごとに格納されたデータ格子
-           %}
-            %%====================================================================================   
+        %% cellに格納[extractMotion]
+        function [cellNoiseSignal,cellSignal] = separateNoiseMotion(param,signal,gaid,n)
+           % extractNoiseMotionで抽出した1つなぎのデータをcellごとに格納
+           %
+           % Args:
+           %    extractNoiseMotion
+           %     t_motion       (array) : 各モードの時間配列
+           %     sig_motion     (array) : ガイド信号の各モードの振幅配列
+           %     noise_motion   (array) : ノイズ信号の各モードの振幅配列
+           %  
+           %  Return:
+           %     cellSignal      (cell) : ガイド信号の各モードが半周期ごとに格納されたデータ格子
+           %     cellNoiseSignal (cell) : ノイズ信号の各モードが半周期ごとに格納されたデータ格子
+           %
+           %%====================================================================================   
 
             %   Detailed explanation goes here
-            t_start_end = 1;
+            timeStartEnd = 1;
 
             % extractNoiseMotionの実行
-            [t_motion,sig_motion,noise_motion] = extractNoiseMotion(param,signal,gaid);
+            [timeMotion,signalMotion,noiseSignalMotion] = extractNoiseMotion(param,signal,gaid,n);
             
-            for k = 1 : length(t_motion)-1
-                if(t_motion(k+1) - t_motion(k) > 1/param.Fs + 7*eps)
-                    t_start_end = [t_start_end,k,k+1];
+            for k = 1 : length(timeMotion)-1
+                if(timeMotion(k+1) - timeMotion(k) > 1/param.fs + 7*eps)
+                    timeStartEnd = [timeStartEnd,k,k+1];
                 end
             end
             
-            t_start_end = [t_start_end, length(t_motion)];
-            cellSignal = cell(1,length(t_start_end)/2);
-            cellNoiseSignal = cell(1,length(t_start_end)/2);
+            timeStartEnd = [timeStartEnd, length(timeMotion)];
+            cellSignal = cell(1,length(timeStartEnd)/2);
+            cellNoiseSignal = cell(1,length(timeStartEnd)/2);
             
             for l = 1:size(cellSignal,2)
-                cellSignal(1,l) = {sig_motion(t_start_end(2*l-1):t_start_end(2*l))};
-                cellNoiseSignal(1,l) = {noise_motion(t_start_end(2*l-1):t_start_end(2*l))};
+                cellSignal(1,l) = {signalMotion(timeStartEnd(2*l-1):timeStartEnd(2*l))};
+                cellNoiseSignal(1,l) = {noiseSignalMotion(timeStartEnd(2*l-1):timeStartEnd(2*l))};
             end
         end
         
-        %% 時間軸方向に歪んだ波形の切り出し
-        function [new_extend_time,new_extend_signal] = separateExtendMotion(param,signal)
-            %{
-             Args:  
-                signal        : ノイズを含んだテスト信号
-                gaid          : ガイド波形となるノイズを含まない信号
-            
-            Return:
-                new_time        : 選択したモードのみからなる時間配列
-                new_signal      : 選択したモードのみからなる振幅配列
-                new_noise_signal: 選択したモードのみからなるノイズ信号の振幅配列 
-             Note:
-             実際の音響信号は、ジッタや、クロックのズレによって時間軸方向に非定常な伸縮が生じる（時間軸の歪）
-             ガイド波形をスライドさせながら相互相関を用いることで、ロバストな切り出し位置決定を行う
-           %}
+        %% 時間軸方向に歪んだ波形の切り出し[Separate+Extract]
+        function cellExtendSignal = separateExtendMotion(param,signal,n)
+            % 時間軸方向に歪んだ波形の切り出し
+            %
+            % Args:  
+            %    signal        : 時間軸方向に歪んだテスト信号
+            %
+            %Return:
+            %    cellExtendSignal    : 各モードが半周期ごとに格納されたデータ格子
+            %
+            % Note:
+            % 実際の音響信号は、ジッタや、クロックのズレによって時間軸方向に非定常な伸縮が生じる（時間軸の歪）
+            % ガイド波形をスライドさせながら相互相関を用いることで、ロバストな切り出し位置決定を行う
+            %
             %%==================================================================================== 
-            %%cellの宣言
-            k_signal = fix(length(signal)/(param.Fs/param.f))
-            signal_cell = cell(1,k_signal);
-            signal_pull = cell(1,k_signal);
             
-            %%ガイド波形の
-            K_GAID   = 10;
-            sig = CreateSignal(param.Fs,param.f,1);
+            %%cellの宣言
+            signalCycleNumber = fix(length(signal)/(param.fs/param.f));
+            cellExtendSignal = cell(1,signalCycleNumber);
+            
+            %%ガイド波形のパラメータ
+            gen = CreateSignal(param.fs,param.f,1); %コンストラクタ
             FRAME=3;
+            gaidCycleNumber = 4*FRAME; %ガイド波形の周期
 
             %%波形＋ガイドの準備
             start=1; i=1;
 
-            for count=1:k_signal-2
+            for count=1:signalCycleNumber-2
                 % Frame 分波形を切り出す
-                y = signal(start:start+param.Fs/param.f*FRAME);
-                
+                y = signal(start:start+(param.fs/param.f)*FRAME);
+                length(y)
                 % ガイド波形の作成
-                Amp = mean(findpeaks(y));
-                [gaid,~] = sig.createCosSample(param,K_GAID);
-                gaid = Amp * gaid;
+                Amp = max(y);
+                gaid = gen.createCosSample(gaidCycleNumber);
+                gaid = Amp * gaid; %定数倍しても相関は変わらない,plot確認のため
                 
                 %%波形の位置合わせ（相互相関）
-                [C,lag] = xcorr(gaid,yy);
+                [C,lag] = xcorr(gaid,y);
                 C = C/max(C);
                 
                 % calculate lags
@@ -231,51 +256,42 @@ classdef Separation
                 gaid = gaid(lag(I)+1:end);
                 
                 %% 配列整理
-                [push_gaid,push_signal] = separateNoiseMotion(param,y,gaid(1:param.Fs/param.F*FREAM),1);
-                [pull_gaid,pull_signal] = separateNoiseMotion(param,y,gaid(1:param.Fs/param.F*FREAM),2);
+                [extractedSignal,extractedGaid,] = separateNoiseMotion(param,y,gaid(1:param.fs/param.f*FRAME+1),n);
+
+                if n == 1
+                    [~,extractOtherSignal] = separateNoiseMotion(param,y,gaid(1:param.fs/param.f*FRAME+1),2);
+                elseif n == 2
+                    [~,extractOtherSignal] = separateNoiseMotion(param,y,gaid(1:param.fs/param.f*FRAME+1),1);
+                end
                 
-                pushL=length(push_signal);
-                pullL=length(pull_signal);
+                extractLength=length(extractedSignal);
                 
                 % one period pull・push signal in Cross-correlation situation
                 
                     if count == 1
-                        signal_push{1,i}=push_signal{1,pushL-2};
-                        signal_pull{1,i}=pull_signal{1,pullL-2};
-                
-                        signal_push{1,i+1}=push_signal{1,pushL-1};
-                        signal_pull{1,i+1}=pull_signal{1,pullL-1};
+                        cellExtendSignal{1,i} = extractedSignal{1,extractLength-2};
+                        cellExtendSignal{1,i+1} = extractedSignal{1,extractLength-1};
                         
                         i=i+2;
                     
                     elseif count == k-2
                         
-                        signal_push{1,i}=push_signal{1,pushL-1};
-                        signal_pull{1,i}=pull_signal{1,pullL-1};
-                
-                        signal_push{1,i+1}=push_signal{1,pushL};
-                        signal_pull{1,i+1}=pull_signal{1,pullL};        
+                        cellExtendSignal{1,i} = extractedSignal{1,extractLength-1};
+                        cellExtendSignal{1,i+1} = extractedSignal{1,extractLength};    
                         
-                        i=i+2;
+                        i = i+2;
                     else
-                        signal_push{1,i}=push_signal{1,pushL-1};
-                        signal_pull{1,i}=pull_signal{1,pullL-1};
+                        cellExtendSignal{1,i} = extractedSignal{1,extractLength-1};
                         
                         i=i+1;
                     end      
             
                 % calculate next start point
-                A=length(push_gaid{1,1})+length(pull_gaid{1,1});
-                start=start+A;
+                cellLength=length(extractedGaid{1,1})+length(extractOtherSignal{1,1});
+                start = start+cellLength;
            
             end
-            
-            signal_push = readArray(pushInversion(signal_push));
-            signal_pull = readArray(pullInversion(signal_pull));
         end
-
-
-
-
+        
     end
 end

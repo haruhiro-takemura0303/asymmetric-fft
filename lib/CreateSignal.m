@@ -1,80 +1,82 @@
 classdef CreateSignal
-    
+    %テスト信号の作成
     properties
-    Fs
-    f
-    amp
+    fs  %サンプリング周波数
+    f   %テスト信号の周波数
+    amp %振幅
     end
     
     methods
-        
-        function param = CreateSignal(Fs,f,amp)
+        %% コンストラクタ
+        function param = CreateSignal(sampleRate,freq,amp)
             % Init parameter
             if nargin == 3
-                param.Fs = Fs;
-                param.f = f;
+                param.fs = sampleRate;
+                param.f = freq;
                 param.amp = amp;
             else
                 error("Input argument need three.")
             end
         end
     
-        %% Cos信号を生成する
+        %% Cos信号の作成
         function [signal,time] = createCosSample(param,period)
-        %{
-        Args:　
-            period       : 周期数
-        
-        Return:
-            signal       : cos振幅データ
-            time         : 時間データ
-        
-        Note:
-            ampで始まりampで終わるcos信号を作成する。
+        % 余弦波信号を作成する。
+        %
+        % Args:　
+        %    period       : 周期数
+        %
+        %Return:
+        %    signal       : cos振幅データ
+        %    time         : 時間データ
+        %
+        %Note:
+        %    ampで始まりampで終わるcos信号を作成する。
         %}
         %====================================================================================                          
             t_end = period/param.f 
-            time = 0 : 1/param.Fs : t_end;           
+            time = 0 : 1/param.fs : t_end;           
             signal = param.amp*cos(2*pi*param.f*time);
 
         end
 
-        %% Sin信号を生成する
+        %% Sin信号の作成
         function [signal,time] = createSinSample(param,period)
-        %{
-        Args:　
-            period       : 周期数
-        
-        Return:
-            signal       : cos振幅データ
-            time         : 時間データ
-        
-        Note:
-            0で始まり0で終わるSin信号を作成する。
-        %}
+        % 正弦波信号を作成する。
+        %
+        %Args:　
+        %    period       : 周期数
+        %
+        %Return:
+        %    signal       : cos振幅データ
+        %    time         : 時間データ
+        %
+        %Note:
+        %    0で始まり0で終わるSin信号を作成する。
+        %
         %====================================================================================                          
             t_end = period/param.f 
-            time = 0 : 1/param.Fs : t_end;           
+            time = 0 : 1/param.fs : t_end;           
             signal = param.amp*sin(2*pi*param.f*time);
             
         end
         
-        %% 一様減衰の高調波を付加する
+        %% 高調波の付加
         function new_signal = createDistorionSignal(param,Kd,D2,hnum,signal)
-        %{ 
-        Args:
-            Kd          : 2次高調波以降の減衰の傾斜 db/Oct
-            D2          : 二次高調波の振幅
-            hnum        : 高調波の次数
-            data        : 入力データ
-        
-        Returun:
-            new_signal  : 歪付加後の信号
-    
-        Note:
-            高調波の振幅値から高調波の係数を逆算し、高調波を付加する多項式モデルを生成する。
-            THDの定義に従い、振幅1の波形を入力した際の高調波の振幅倍率を仮定している。
-        %}
+        % 入力に一様減衰の高調波を付加する
+        % Args:
+        %    Kd          : 2次高調波以降の減衰の傾斜 db/Oct
+        %    D2          : 二次高調波の振幅
+        %    hnum        : 高調波の次数
+        %    data        : 入力データ
+        %
+        %Returun:
+        %    new_signal  : 歪付加後の信号
+        %
+        %Note:
+        %    高調波の振幅値から高調波の係数を逆算し、高調波を付加する多項式モデルを生成する。
+        %    THDの定義に従い、振幅1の波形を入力した際の高調波の振幅倍率を仮定している。
+        %
         %=======================================================================================
             if hnum > 11
                 error("Enter the order of 11 or less.")

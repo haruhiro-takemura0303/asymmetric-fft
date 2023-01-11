@@ -15,11 +15,13 @@ SAVE_PATH = "./data/processed";
 polar_list1  = ["aa" "ab" "ba" "bb"]; %cl,co 
 polar_list2  = ["c" "d"]; %uni
 
-freq_list    = ["40" "1000" "10000" "20000"];
+freq_list    = ["40" "1000" "10000"];
 
 vpp_list_a   = ["0.2" "1" "5" "15" "50"]; %amp_a
 vpp_list_b   = ["0.2" "1" "5" "15"]; %amp_b
 vpp_list_c   = ["0.2" "0.9" "4.5" "14" "50"]; %amp_c
+
+fs = 48e3;
 
 %------------------------------------main-------------------------------------------
 
@@ -87,12 +89,28 @@ if exist(SAVE_PATH+"/"+amp_name,"dir") == 0
     mkdir(SAVE_PATH+"/"+amp_name)
 end
 
-%保存
+%データの保存
 save(SAVE_PATH+"/"+amp_name+"/clean.mat","clean",'-v7.3');
 save(SAVE_PATH+"/"+amp_name+"/commercial.mat","commercial",'-v7.3');
 save(SAVE_PATH+"/"+amp_name+"/uni.mat","uni",'-v7.3');
 
-
+% ラベルの保存
+if exist(SAVE_PATH+"/"+amp_name+"/parameter.mat","dir") == 0
+    
+    %サンプリング周波数
+    parameter.Fs = fs;
+    
+    %周波数
+    for i = 1:length(freq_list)
+        parameter.freq(i) = str2num(freq_list(i));
+    end
+    
+    %振幅
+    for i = 1:length(vpp_list)
+        parameter.vpp(i) = str2num(vpp_list(i));
+    end
+    save(SAVE_PATH+"/"+amp_name+"/parameter.mat","parameter",'-v7.3');
+end
 %---------------------------------function-------------------------------------------
 
 function signal = read_signal(data_strct)

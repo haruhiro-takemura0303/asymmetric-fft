@@ -1,0 +1,49 @@
+clear all
+
+%% test 波形の作成
+%パラメータ
+Fs = 48e3;
+f = 1000;
+T = 1/f * 10;
+t = 0:1/Fs:T;
+vis = Visual(Fs,f);
+
+%余弦波の作成
+signal = cos(2*pi*f*t);
+
+figure(1)
+vis.plotSignal(signal);
+title("test signal")
+
+%% Object を宣言
+sep = Separation(Fs,f);
+rec = Reconstruct(4);
+
+% 分離
+n = 2;
+separateSignal = sep.separateMotion(signal,n);
+
+figure(2)
+vis.plotEachSignal(separateSignal,"PULL");
+
+%　水平方向反転
+pullReverseHorizontal = rec.reverseHorizontal(separateSignal,n);
+signal = rec.reconstructHorizontal(separateSignal,n);
+
+figure(3)
+title("Horizontal")
+subplot(1,2,1)
+vis.plotEachSignal(pullReverseHorizontal,"PULL");
+subplot(1,2,2)
+scatter(1:length(signal),signal);
+
+%　垂直方向反転
+pullReverseVertical = rec.reverseVertical(separateSignal,n);
+signal = rec.reconstructVertical(separateSignal,n);
+
+figure(4)
+title("Vertical")
+subplot(1,2,1)
+vis.plotEachSignal(pullReverseVertical,"PULL");
+subplot(1,2,2)
+scatter(1:length(signal),signal);
