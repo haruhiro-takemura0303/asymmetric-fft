@@ -7,7 +7,7 @@ clear classes
 AMP_TYPE = "a"; %a,b,c 
 DATA_PATH  = "./data/processed";
 SAVE_PATH = "./data/analysis";
-DIRECTION = "Vertical"; %Vertical , Horizontal
+DIRECTION = "Horizontal"; %Vertical , Horizontal
 
 % 分析周期
 PERIOD_LIST = [5*40,5*1000,5*10000];
@@ -51,7 +51,7 @@ for supplyNum = 1:length(SUPPLY_LIST)
     end
     
     for polarNum = 1:length(polarList)
-        for freqNum = 1:length(length(parameter.freq))
+        for freqNum = 1:length(parameter.freq)
             for vppNum = 1:length(parameter.vpp)
                 for trialNum = 1:trialLen
     
@@ -99,7 +99,8 @@ for supplyNum = 1:length(SUPPLY_LIST)
                             signalPull = rec.reconstructHorizontal(cellPullSignal,2);
                         end
                         
-                        % fft
+                        %%fft
+                        % 格納波形の宣言
                         [~,signalFFTlist(:,signalNum)] = calcFFT(fs_p,signal_p(1:length(signalPush)+length(signalPull)));
                         [~,pushFFTlist(:,signalNum)] = calcFFT(fs_p,signalPush);
                         [~,pullFFTlist(:,signalNum)] = calcFFT(fs_p,signalPull);
@@ -108,21 +109,23 @@ for supplyNum = 1:length(SUPPLY_LIST)
                     
                     %データの格納
                     if supplyType == "clean"
-                        clean.(polarList(polarNum)).freq(freqNum).vpp(vppNum).trial(trialNum).mode(1).magnitude = pushFFTlist;
-                        clean.(polarList(polarNum)).freq(freqNum).vpp(vppNum).trial(trialNum).mode(2).magnitude = pullFFTlist;
-                        clean.(polarList(polarNum)).freq(freqNum).vpp(vppNum).trial(trialNum).mode(3).magnitude = signalFFTlist;
+                        cleanFFT.(polarList(polarNum)).freq(freqNum).vpp(vppNum).trial(trialNum).mode(1).magnitude = pushFFTlist;
+                        cleanFFT.(polarList(polarNum)).freq(freqNum).vpp(vppNum).trial(trialNum).mode(2).magnitude = pullFFTlist;
+                        cleanFFT.(polarList(polarNum)).freq(freqNum).vpp(vppNum).trial(trialNum).mode(3).magnitude = signalFFTlist;
                     
                     elseif supplyType == "commercial"
-                        commercial.(polarList(polarNum)).freq(freqNum).vpp(vppNum).trial(trialNum).mode(1).magnitude = pushFFTlist;
-                        commercial.(polarList(polarNum)).freq(freqNum).vpp(vppNum).trial(trialNum).mode(2).magnitude = pullFFTlist;
-                        commercial.(polarList(polarNum)).freq(freqNum).vpp(vppNum).trial(trialNum).mode(3).magnitude = signalFFTlist;
+                        commercialFFT.(polarList(polarNum)).freq(freqNum).vpp(vppNum).trial(trialNum).mode(1).magnitude = pushFFTlist;
+                        commercialFFT.(polarList(polarNum)).freq(freqNum).vpp(vppNum).trial(trialNum).mode(2).magnitude = pullFFTlist;
+                        commercialFFT.(polarList(polarNum)).freq(freqNum).vpp(vppNum).trial(trialNum).mode(3).magnitude = signalFFTlist;
                     
                     elseif supplyType == "uni"
-                        uni.(polarList(polarNum)).freq(freqNum).vpp(vppNum).trial(trialNum).mode(1).magnitude = pushFFTlist;
-                        uni.(polarList(polarNum)).freq(freqNum).vpp(vppNum).trial(trialNum).mode(2).magnitude = pullFFTlist;
-                        uni.(polarList(polarNum)).freq(freqNum).vpp(vppNum).trial(trialNum).mode(3).magnitude = signalFFTlist;
+                        uniFFT.(polarList(polarNum)).freq(freqNum).vpp(vppNum).trial(trialNum).mode(1).magnitude = pushFFTlist;
+                        uniFFT.(polarList(polarNum)).freq(freqNum).vpp(vppNum).trial(trialNum).mode(2).magnitude = pullFFTlist;
+                        uniFFT.(polarList(polarNum)).freq(freqNum).vpp(vppNum).trial(trialNum).mode(3).magnitude = signalFFTlist;
                     end
+                    
                     disp("% Finish FFT Analysis\n")
+                    clear pushFFTlist pullFFTlist signalFFTlist
                 end
             end
         end
@@ -146,9 +149,9 @@ if exist(SAVE_PATH+"/"+AMP_NAME,"dir") == 0
 end
 
 % 保存
-save(SAVE_PATH+"/"+AMP_NAME+"/"+DIRECTION+"/clean.mat","clean",'-v7.3');
-save(SAVE_PATH+"/"+AMP_NAME+"/"+DIRECTION+"/commercial.mat","commercial",'-v7.3');
-save(SAVE_PATH+"/"+AMP_NAME+"/"+DIRECTION+"/uni.mat","uni",'-v7.3');
+save(SAVE_PATH+"/"+AMP_NAME+"/"+DIRECTION+"/clean.mat","cleanFFT",'-v7.3');
+save(SAVE_PATH+"/"+AMP_NAME+"/"+DIRECTION+"/commercial.mat","commercialFFT",'-v7.3');
+save(SAVE_PATH+"/"+AMP_NAME+"/"+DIRECTION+"/uni.mat","uniFFT",'-v7.3');
 save(SAVE_PATH+"/"+AMP_NAME+"/"+DIRECTION+"/parameter.mat","parameter",'-v7.3');
 disp("% Finish")
 
