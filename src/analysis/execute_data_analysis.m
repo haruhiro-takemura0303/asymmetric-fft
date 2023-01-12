@@ -19,15 +19,14 @@ SAVE_PATH = "./data/analysis";
 PERIOD_LIST = [5*40,5*1000,5*10000];
 
 % アップサンプリング倍率
-% UPRATE_LIST = [0,10,20];%%%%%%%%%%%%%%%%%%
-UPRATE_LIST = [0,10];
+UPRATE_LIST = [0,10,20];
+
 %--------------------------------------info------------------------------------
 % 電源タイプ
 SUPPLY_LIST = ["clean" "commercial" "uni"];
 
 % 電源極性
-% polarList1  = ["aa" "ab" "ba" "bb"]; %cl,co 
- polarList1  = ["aa" "ab"]; %cl,co 
+polarList1  = ["aa" "ab" "ba" "bb"]; %cl,co 
 polarList2  = ["c" "d"]; %uni
 
 % 試行回数
@@ -63,7 +62,7 @@ for trialNum = 1:trialLen
 
         for polarNum = 1:length(polarList)
             for vppNum = 1:length(parameter.vpp)
-                for freqNum = 1:length(parameter.freq)-1 %%%%%%%%%%%%%%%%%
+                for freqNum = 1:length(parameter.freq)
                     
                     %%信号の読み込み
                     disp("%%")
