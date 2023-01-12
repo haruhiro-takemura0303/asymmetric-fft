@@ -6,7 +6,6 @@ clear classes
 %             |--ampA
 %                   |-Horizontal
 %                   |-Vertical
-%
 
 
 %----------------------------------config------------------------------------
@@ -14,13 +13,14 @@ clear classes
 AMP_TYPE = "a"; %a,b,c 
 DATA_PATH  = "./data/processed";
 SAVE_PATH = "./data/analysis";
+DIRECTION = "Vertical"; %Vertical , Horizontal
 
 % 分析周期
 PERIOD_LIST = [5*40,5*1000,5*10000];
 
 % アップサンプリング倍率
 % UPRATE_LIST = [0,10,20];%%%%%%%%%%%%%%%%%%
-UPRATE_LIST = [0,10];
+UPRATE_LIST = [0,0];
 %--------------------------------------info------------------------------------
 % 電源タイプ
 SUPPLY_LIST = ["clean" "commercial" "uni"];
@@ -83,12 +83,12 @@ for trialNum = 1:trialLen
                     disp("%%   - Freq   : "+sprintf("%i, ",parameter.freq(1:freqNum)))
                     disp("%%        -- Fs     : "+num2str(fs))
                     disp("%%        -- Fs_up  : "+num2str(fs_up))
+                    
 
                     %---------------------analysis----------------------------
                     disp("%%")
                     disp("%%  > Start FFT Analysis")
                     disp("%%  --------------------------")
-                    
                     % インスタンス
                     rec = Reconstruct(PERIOD_LIST(freqNum));
                     
@@ -185,9 +185,9 @@ for trialNum = 1:trialLen
     
 
     % Horz
-    save(SAVE_PATH+"/"+AMP_NAME+"/"+num2str(trialNum)+"/Horizontal"+"/clean.mat","cleanH",'-v7.3');
-    save(SAVE_PATH+"/"+AMP_NAME+"/"+num2str(trialNum)+"/Horizontal"+"/commercial.mat","commercialH",'-v7.3');
-    save(SAVE_PATH+"/"+AMP_NAME+"/"+num2str(trialNum)+"/Horizontal"+"/uni.mat","uniH",'-v7.3');
+    save(SAVE_PATH+"/"+AMP_NAME+"/"+num2str(trialNum)+"/Vertical"+"/clean.mat","cleanH",'-v7.3');
+    save(SAVE_PATH+"/"+AMP_NAME+"/"+num2str(trialNum)+"/Vertical"+"/commercial.mat","commercialH",'-v7.3');
+    save(SAVE_PATH+"/"+AMP_NAME+"/"+num2str(trialNum)+"/Vertical"+"/uni.mat","uniH",'-v7.3');
     
     clear cleanV commercialV uniV cleanH commercialH uniH   
     disp("%%  Finish")
